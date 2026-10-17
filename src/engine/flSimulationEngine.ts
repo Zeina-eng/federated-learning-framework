@@ -8,7 +8,7 @@ import {
   FrameworkMetrics
 } from '../types/flTypes';
 import { computeConfusionMatrix, computeMetricsFromConfusion, computeAUC, calculatePrivacyBudget } from '../utils/metrics';
-import { applyDataPoisoning, applyBackdoorAttack, poisonModelUpdate, evaluateMembershipInferenceAttack } from './attackEngine';
+import { applyDataPoisoning, applyBackdoorAttack, poisonModelUpdate } from './attackEngine';
 import {
   applyDifferentialPrivacy,
   applySecureAggregation,

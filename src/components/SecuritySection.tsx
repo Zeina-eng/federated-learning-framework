@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Key, Eye, Sparkles, AlertTriangle, Cpu, CheckSquare, Square } from 'lucide-react';
+import { Shield, Key, Eye, Sparkles, AlertTriangle, CheckSquare, Square } from 'lucide-react';
 import { SecurityConfig } from '../types/flTypes';
 
 interface SecuritySectionProps {

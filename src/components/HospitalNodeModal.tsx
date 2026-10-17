@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Server, Activity, ShieldCheck, AlertTriangle, Database } from 'lucide-react';
+import { X, Server, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { RoundResult } from '../types/flTypes';
 
 interface HospitalNodeModalProps {

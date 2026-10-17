@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Database, Upload, Server, Sliders, CheckCircle2, FileSpreadsheet, Layers, AlertCircle } from 'lucide-react';
+import { Database, Upload, Server, Sliders, CheckCircle2, Layers, AlertCircle } from 'lucide-react';
 import { DatasetConfig, DatasetInfo } from '../types/flTypes';
 import { BUILTIN_DATASETS, parseCSVData } from '../data/datasets';
 

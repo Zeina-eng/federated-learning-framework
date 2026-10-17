@@ -1,8 +1,7 @@
-import React from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { Layers, Play, CheckCircle2, Shield, Eye, AlertTriangle, Download } from 'lucide-react';
+import { Layers, Play } from 'lucide-react';
 import { FrameworkMetrics } from '../types/flTypes';
 
 interface ComparisonSectionProps {

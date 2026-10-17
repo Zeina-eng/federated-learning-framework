@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Activity, Database, Download, Sparkles, Cpu, Globe } from 'lucide-react';
+import { ShieldCheck, Download, Sparkles, Cpu, Globe } from 'lucide-react';
 import { PythonHealthStatus } from '../services/flApiService';
 
 interface NavbarProps {

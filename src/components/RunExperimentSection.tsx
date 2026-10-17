@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Rocket, Play, Pause, RefreshCw, Terminal, Activity, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Rocket, Play, Pause, Terminal, Activity } from 'lucide-react';
 import { RoundResult, DatasetConfig, SecurityConfig, AttackConfig } from '../types/flTypes';
 
 interface RunExperimentSectionProps {
@@ -12,7 +12,7 @@ interface RunExperimentSectionProps {
   latestRoundResult: RoundResult | null;
   datasetConfig: DatasetConfig;
   securityConfig: SecurityConfig;
-  attackConfig: AttackConfig;
+  attackConfig?: AttackConfig;
   logMessages: string[];
 }
 
@@ -26,7 +26,7 @@ export const RunExperimentSection: React.FC<RunExperimentSectionProps> = ({
   latestRoundResult,
   datasetConfig,
   securityConfig,
-  attackConfig,
+  attackConfig: _attackConfig,
   logMessages
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);

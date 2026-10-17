@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { Navbar } from './components/Navbar';
 import { DatasetSection } from './components/DatasetSection';
@@ -35,7 +35,6 @@ export default function App() {
 
   // 1. Dataset Configuration State
   const [customDatasets, setCustomDatasets] = useState<DatasetInfo[]>([]);
-  const [selectedDatasetInfo, setSelectedDatasetInfo] = useState<DatasetInfo>(BUILTIN_DATASETS[0]);
   
   const [datasetConfig, setDatasetConfig] = useState<DatasetConfig>({
     datasetId: BUILTIN_DATASETS[0].id,
@@ -45,13 +44,10 @@ export default function App() {
     dirichletAlpha: 0.5
   });
 
-  // Update selected dataset object when datasetId changes
-  useEffect(() => {
+  // Derived selected dataset object
+  const selectedDatasetInfo = useMemo(() => {
     const all = [...BUILTIN_DATASETS, ...customDatasets];
-    const found = all.find(d => d.id === datasetConfig.datasetId);
-    if (found) {
-      setSelectedDatasetInfo(found);
-    }
+    return all.find(d => d.id === datasetConfig.datasetId) || BUILTIN_DATASETS[0];
   }, [datasetConfig.datasetId, customDatasets]);
 
   // Check Python PyTorch backend health status periodically
@@ -296,6 +292,7 @@ export default function App() {
           setIsTraining(false);
         }
       );
+      simulationRef.current = { cancel: wsClient.cancel };
       return;
     }
 
