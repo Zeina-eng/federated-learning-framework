@@ -21,8 +21,18 @@ import {
   DatasetInfo
 } from './types/flTypes';
 import { runFLSimulation } from './engine/flSimulationEngine';
+import {
+  checkPythonBackendHealth,
+  runPythonSimulationViaWebSocket,
+  runPythonBenchmark,
+  PythonHealthStatus
+} from './services/flApiService';
 
 export default function App() {
+  // Engine Selection State: Python PyTorch vs Browser TypeScript
+  const [engineMode, setEngineMode] = useState<'python' | 'browser'>('python');
+  const [pythonHealth, setPythonHealth] = useState<PythonHealthStatus>({ healthy: false });
+
   // 1. Dataset Configuration State
   const [customDatasets, setCustomDatasets] = useState<DatasetInfo[]>([]);
   const [selectedDatasetInfo, setSelectedDatasetInfo] = useState<DatasetInfo>(BUILTIN_DATASETS[0]);
@@ -43,6 +53,23 @@ export default function App() {
       setSelectedDatasetInfo(found);
     }
   }, [datasetConfig.datasetId, customDatasets]);
+
+  // Check Python PyTorch backend health status periodically
+  useEffect(() => {
+    let mounted = true;
+    const checkHealth = async () => {
+      const status = await checkPythonBackendHealth();
+      if (mounted) {
+        setPythonHealth(status);
+      }
+    };
+    checkHealth();
+    const interval = setInterval(checkHealth, 4000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // 2. FL Hyperparameters State
   const [flConfig, setFlConfig] = useState<FLConfig>({
@@ -222,6 +249,7 @@ export default function App() {
     simulationRef.current.cancel = false;
 
     addLog(`🚀 Launching Federated Learning Experiment on ${selectedDatasetInfo.name}...`);
+    addLog(`Engine: ${engineMode === 'python' ? '🐍 Python (PyTorch Engine)' : '⚡ Browser (TypeScript Engine)'}`);
     addLog(`Config: ${flConfig.numClients} Institutions | ${flConfig.commRounds} Rounds | ${flConfig.aggregationStrategy} Strategy`);
 
     let activeSecurityName = 'Baseline FL';
@@ -232,6 +260,46 @@ export default function App() {
 
     addLog(`Security Mode: ${activeSecurityName}`);
 
+    // Execution path A: Python PyTorch WebSocket Engine
+    if (engineMode === 'python') {
+      addLog('Connecting to Python PyTorch backend (ws://localhost:8000/ws/fl-simulate)...');
+      
+      const wsClient = runPythonSimulationViaWebSocket(
+        datasetConfig,
+        flConfig,
+        securityConfig,
+        attackConfig,
+        selectedDatasetInfo.id.startsWith('custom') ? selectedDatasetInfo.data : undefined,
+        (roundRes) => {
+          setCurrentRound(roundRes.round);
+          setLatestRoundResult(roundRes);
+          addLog(
+            `[PyTorch] Round ${roundRes.round}/${flConfig.commRounds} | Accuracy: ${roundRes.globalAccuracy}% | Loss: ${roundRes.globalLoss} | Privacy ε: ${roundRes.privacyEpsilon} | ASR: ${roundRes.attackSuccessRate}%`
+          );
+          if (roundRes.anomalyDetectionRate < 100 && securityConfig.anomalyDetection) {
+            addLog(`⚠️ ANOMALY DETECTOR: Flagged & isolated malicious client updates.`);
+          }
+        },
+        (resultMetrics) => {
+          setLatestMetrics(resultMetrics);
+          setIsTraining(false);
+          addLog(`✅ [PyTorch Engine] EXPERIMENT COMPLETE: Final Global Accuracy = ${resultMetrics.accuracy}% | F1-Score = ${resultMetrics.f1Score}%`);
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        },
+        (errorMsg) => {
+          addLog(`⚠️ [Python Engine Error]: ${errorMsg}`);
+          addLog('💡 Tip: Make sure the Python server is running with run_backend.bat or switch to "Browser (TS)" mode.');
+          setIsTraining(false);
+        }
+      );
+      return;
+    }
+
+    // Execution path B: In-Browser TypeScript Engine
     try {
       const fullData = selectedDatasetInfo.data;
       const numFeatures = selectedDatasetInfo.featureNames.length;
@@ -278,7 +346,25 @@ export default function App() {
   const handleRunAllComparisons = async () => {
     if (isComparing || isTraining) return;
     setIsComparing(true);
-    addLog('⚡ Initiating Automated 5-Framework Comparative Benchmark...');
+    addLog(`⚡ Initiating Automated 5-Framework Benchmark (${engineMode === 'python' ? 'Python PyTorch' : 'Browser Engine'})...`);
+
+    if (engineMode === 'python' && pythonHealth.healthy) {
+      try {
+        addLog('Requesting PyTorch benchmark from Python backend...');
+        const benchmarkResults = await runPythonBenchmark(
+          datasetConfig,
+          flConfig,
+          attackConfig,
+          selectedDatasetInfo.id.startsWith('custom') ? selectedDatasetInfo.data : undefined
+        );
+        setComparisonResults(benchmarkResults);
+        setIsComparing(false);
+        addLog('🎉 [PyTorch] Comparative Benchmark Analysis Completed successfully!');
+        return;
+      } catch (err: any) {
+        addLog(`⚠️ Python benchmark request failed (${err.message}), falling back to browser engine...`);
+      }
+    }
 
     const fullData = selectedDatasetInfo.data;
     const numFeatures = selectedDatasetInfo.featureNames.length;
@@ -348,6 +434,9 @@ export default function App() {
         onLoadPreset={handleLoadPreset}
         onExportReport={handleExportReport}
         isTraining={isTraining}
+        engineMode={engineMode}
+        setEngineMode={setEngineMode}
+        pythonHealth={pythonHealth}
       />
 
       {/* Main Container */}

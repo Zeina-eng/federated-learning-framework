@@ -1,13 +1,24 @@
 import React from 'react';
-import { ShieldCheck, Activity, Database, Download, Sparkles } from 'lucide-react';
+import { ShieldCheck, Activity, Database, Download, Sparkles, Cpu, Globe } from 'lucide-react';
+import { PythonHealthStatus } from '../services/flApiService';
 
 interface NavbarProps {
   onLoadPreset: (presetKey: string) => void;
   onExportReport: () => void;
   isTraining: boolean;
+  engineMode: 'python' | 'browser';
+  setEngineMode: (mode: 'python' | 'browser') => void;
+  pythonHealth: PythonHealthStatus;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onLoadPreset, onExportReport, isTraining }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onLoadPreset,
+  onExportReport,
+  isTraining,
+  engineMode,
+  setEngineMode,
+  pythonHealth
+}) => {
   return (
     <header className="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-6 py-3.5 mb-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -36,8 +47,47 @@ export const Navbar: React.FC<NavbarProps> = ({ onLoadPreset, onExportReport, is
           </div>
         </div>
 
-        {/* Action Controls & Presets */}
+        {/* Action Controls, Engine Selector & Presets */}
         <div className="flex items-center gap-3 flex-wrap">
+          {/* Engine Selector Pill */}
+          <div className="flex items-center bg-slate-900 border border-slate-700/80 rounded-lg p-1 text-xs">
+            <button
+              onClick={() => setEngineMode('python')}
+              disabled={isTraining}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-semibold transition ${
+                engineMode === 'python'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title={
+                pythonHealth.healthy
+                  ? `PyTorch Backend Active on ${pythonHealth.device?.toUpperCase()} (${pythonHealth.torch_version})`
+                  : 'Python Backend Offline (Start with run_backend.bat)'
+              }
+            >
+              <Cpu className="w-3.5 h-3.5" />
+              <span>Python (PyTorch)</span>
+              {pythonHealth.healthy ? (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Connected" />
+              ) : (
+                <span className="w-2 h-2 rounded-full bg-amber-400" title="Offline - Start backend" />
+              )}
+            </button>
+            <button
+              onClick={() => setEngineMode('browser')}
+              disabled={isTraining}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-semibold transition ${
+                engineMode === 'browser'
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Browser-Based Client-Side TypeScript Simulation"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>Browser (TS)</span>
+            </button>
+          </div>
+
           <div className="flex items-center bg-slate-900/90 border border-slate-700/60 rounded-lg p-1 text-xs font-medium">
             <span className="px-2 text-slate-400 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Presets:
